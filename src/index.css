@@ -1,0 +1,92 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; width: 100%; overflow-x: hidden; }
+#root { width: 100%; min-height: 100vh; }
+.test-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 9px 20px;
+
+  background: rgba(200, 255, 77, 0.04);
+  border-bottom: 1px solid rgba(200, 255, 77, 0.15);
+
+  color: var(--ink-1);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.test-mode-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lime);
+
+  box-shadow: 0 0 8px var(--lime);
+
+  animation: testPulse 1.5s ease-in-out infinite;
+}
+
+.test-mode span:nth-child(2) {
+  color: var(--lime);
+}
+
+.test-mode-line {
+  width: 45px;
+  height: 1px;
+  position: relative;
+  overflow: hidden;
+  background: rgba(200, 255, 77, 0.15);
+}
+
+.test-mode-line::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -20px;
+
+  width: 20px;
+  height: 1px;
+
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime);
+
+  animation: testLine 1.8s linear infinite;
+}
+
+@keyframes testPulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes testLine {
+  0% {
+    left: -20px;
+  }
+
+  100% {
+    left: 45px;
+  }
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.classa-logo {
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+  border-radius: 9px;
+  display: block;
+}
