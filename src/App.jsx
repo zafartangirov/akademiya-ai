@@ -450,11 +450,51 @@ function TeamGroup({ group, gradFor }) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Premium Lottie loading screen                                      */
+/* ------------------------------------------------------------------ */
+function PremiumLoader({ visible }) {
+  return (
+    <div
+      className={`premium-loader ${visible ? "is-visible" : "is-hidden"}`}
+      aria-hidden={!visible}
+    >
+      <div className="loader-noise" />
+      <div className="loader-orbit orbit-one" />
+      <div className="loader-orbit orbit-two" />
+      <div className="loader-core-glow" />
+
+      <div className="loader-content">
+        <div className="loader-brand">
+          <img src={classaLogo} alt="" />
+          <span>AKADEMIYA AI</span>
+        </div>
+
+        <div className="loader-lottie-wrap">
+          <dotlottie-wc
+            src="https://lottie.host/4db68bbd-31f6-4cd8-84eb-189de081159a/IGmMCqhzpt.lottie"
+            autoplay
+            loop
+          ></dotlottie-wc>
+        </div>
+
+        <div className="loader-status">
+          <span className="loader-status-dot" />
+          <span>Tizim yuklanmoqda</span>
+          <span className="loader-dots"><i /> <i /> <i /></span>
+        </div>
+        <div className="loader-progress"><span /></div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Main page                                                           */
 /* ------------------------------------------------------------------ */
 export default function AkademiyaAIv2() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [theme, setTheme] = useState(() => {
     if (typeof window === "undefined") return "dark";
     return localStorage.getItem("akademiya-theme") || "dark";
@@ -463,6 +503,29 @@ export default function AkademiyaAIv2() {
   useEffect(() => {
     localStorage.setItem("akademiya-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    const startedAt = performance.now();
+    let timer;
+
+    const finishLoading = () => {
+      const elapsed = performance.now() - startedAt;
+      const remaining = Math.max(1200 - elapsed, 0);
+      timer = window.setTimeout(() => setIsLoading(false), remaining);
+    };
+
+    if (document.readyState === "complete") {
+      finishLoading();
+    } else {
+      window.addEventListener("load", finishLoading, { once: true });
+      timer = window.setTimeout(finishLoading, 2600);
+    }
+
+    return () => {
+      window.removeEventListener("load", finishLoading);
+      window.clearTimeout(timer);
+    };
+  }, []);
 
   const toggleTheme = () => {
     setTheme((current) => (current === "dark" ? "light" : "dark"));
@@ -602,6 +665,7 @@ export default function AkademiyaAIv2() {
 
   return (
     <div className={`page ${theme === "light" ? "light-theme" : "dark-theme"}`}>
+      <PremiumLoader visible={isLoading} />
       <div className="test-mode">
   <span className="test-mode-dot"></span>
   <span>Sayt hozir sinov rejimida</span>
@@ -733,6 +797,286 @@ export default function AkademiyaAIv2() {
         }
         .page.light-theme .tm-social-icon {
           background: rgba(15,23,42,0.035);
+        }
+
+        /* ================= PREMIUM LOTTIE LOADER ================= */
+        .premium-loader {
+          position: fixed;
+          inset: 0;
+          z-index: 99999;
+          display: grid;
+          place-items: center;
+          overflow: hidden;
+          background:
+            radial-gradient(circle at 50% 45%, rgba(255, 26, 26, 0.11), transparent 25%),
+            radial-gradient(circle at 50% 50%, rgba(179, 0, 0, 0.08), transparent 48%),
+            #050505;
+          color: #fff;
+          opacity: 1;
+          visibility: visible;
+          pointer-events: auto;
+          transition:
+            opacity 0.72s cubic-bezier(.22,1,.36,1),
+            visibility 0s linear 0s;
+        }
+
+        .premium-loader.is-hidden {
+          opacity: 0;
+          visibility: hidden;
+          pointer-events: none;
+          transition:
+            opacity 0.72s cubic-bezier(.22,1,.36,1),
+            visibility 0s linear 0.72s;
+        }
+
+        .loader-noise {
+          position: absolute;
+          inset: 0;
+          opacity: .045;
+          pointer-events: none;
+          background-image:
+            linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
+          background-size: 42px 42px;
+          mask-image: radial-gradient(circle at center, #000, transparent 72%);
+        }
+
+        .loader-content {
+          position: relative;
+          z-index: 3;
+          width: min(92vw, 560px);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+
+        .loader-brand {
+          display: inline-flex;
+          align-items: center;
+          gap: 11px;
+          margin-bottom: -2px;
+          color: rgba(255,255,255,.92);
+          font-family: 'Unbounded', sans-serif;
+          font-size: clamp(11px, 1.5vw, 14px);
+          font-weight: 700;
+          letter-spacing: .06em;
+          text-transform: uppercase;
+          animation: loaderBrandIn .9s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .loader-brand img {
+          width: 34px;
+          height: 34px;
+          border-radius: 9px;
+          object-fit: cover;
+          box-shadow:
+            0 0 0 1px rgba(255,255,255,.1),
+            0 0 30px rgba(255,26,26,.25);
+        }
+
+        .loader-lottie-wrap {
+          position: relative;
+          width: clamp(210px, 31vw, 330px);
+          height: clamp(210px, 31vw, 330px);
+          display: grid;
+          place-items: center;
+          margin: -8px 0 -10px;
+          filter: drop-shadow(0 0 25px rgba(255,26,26,.22));
+          animation: loaderCoreIn 1s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .loader-lottie-wrap::before {
+          content: "";
+          position: absolute;
+          width: 58%;
+          height: 58%;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(255,26,26,.20), rgba(255,26,26,.06) 42%, transparent 72%);
+          filter: blur(12px);
+          animation: loaderPulse 2.2s ease-in-out infinite;
+        }
+
+        .loader-lottie-wrap dotlottie-wc {
+          position: relative;
+          z-index: 2;
+          display: block;
+          width: 100%;
+          height: 100%;
+        }
+
+        .loader-status {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 4px;
+          color: rgba(255,255,255,.64);
+          font-family: 'Space Mono', monospace;
+          font-size: 10px;
+          letter-spacing: .14em;
+          text-transform: uppercase;
+          animation: loaderStatusIn 1s .18s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .loader-status-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #ff1a1a;
+          box-shadow: 0 0 14px rgba(255,26,26,.9);
+          animation: loaderDot 1.2s ease-in-out infinite;
+        }
+
+        .loader-dots {
+          display: inline-flex;
+          gap: 3px;
+          margin-left: 1px;
+        }
+
+        .loader-dots i {
+          width: 3px;
+          height: 3px;
+          border-radius: 50%;
+          background: #ff4545;
+          animation: loaderDots 1.1s infinite ease-in-out;
+        }
+        .loader-dots i:nth-child(2) { animation-delay: .12s; }
+        .loader-dots i:nth-child(3) { animation-delay: .24s; }
+
+        .loader-progress {
+          position: relative;
+          width: min(260px, 58vw);
+          height: 2px;
+          margin-top: 18px;
+          overflow: hidden;
+          border-radius: 999px;
+          background: rgba(255,255,255,.08);
+          animation: loaderStatusIn 1s .28s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        .loader-progress span {
+          position: absolute;
+          inset: 0 auto 0 0;
+          width: 42%;
+          border-radius: inherit;
+          background: linear-gradient(90deg, transparent, #ff1a1a, #ff4545, transparent);
+          box-shadow: 0 0 16px rgba(255,26,26,.8);
+          animation: loaderProgress 1.65s cubic-bezier(.4,0,.2,1) infinite;
+        }
+
+        .loader-orbit {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          border: 1px solid rgba(255,26,26,.12);
+          border-radius: 50%;
+          transform: translate(-50%,-50%);
+          pointer-events: none;
+        }
+
+        .orbit-one {
+          width: min(62vw, 680px);
+          height: min(62vw, 680px);
+          animation: loaderOrbit 18s linear infinite;
+        }
+
+        .orbit-two {
+          width: min(43vw, 470px);
+          height: min(43vw, 470px);
+          border-color: rgba(255,69,69,.10);
+          transform: translate(-50%,-50%) rotate(55deg);
+          animation: loaderOrbitReverse 13s linear infinite;
+        }
+
+        .loader-core-glow {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: min(36vw, 390px);
+          height: min(36vw, 390px);
+          transform: translate(-50%,-50%);
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(255,26,26,.08), transparent 68%);
+          filter: blur(18px);
+          animation: loaderPulse 2.8s ease-in-out infinite;
+        }
+
+        @keyframes loaderBrandIn {
+          from { opacity: 0; transform: translateY(-14px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes loaderCoreIn {
+          from { opacity: 0; transform: scale(.72); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes loaderStatusIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes loaderPulse {
+          0%,100% { transform: scale(.86); opacity: .55; }
+          50% { transform: scale(1.08); opacity: 1; }
+        }
+        @keyframes loaderDot {
+          0%,100% { transform: scale(.65); opacity: .45; }
+          50% { transform: scale(1.2); opacity: 1; }
+        }
+        @keyframes loaderDots {
+          0%,80%,100% { transform: translateY(0); opacity: .35; }
+          40% { transform: translateY(-3px); opacity: 1; }
+        }
+        @keyframes loaderProgress {
+          from { transform: translateX(-150%); }
+          to { transform: translateX(360%); }
+        }
+        @keyframes loaderOrbit {
+          from { transform: translate(-50%,-50%) rotate(0deg); }
+          to { transform: translate(-50%,-50%) rotate(360deg); }
+        }
+        @keyframes loaderOrbitReverse {
+          from { transform: translate(-50%,-50%) rotate(55deg); }
+          to { transform: translate(-50%,-50%) rotate(-305deg); }
+        }
+
+        .page.light-theme .premium-loader {
+          background:
+            radial-gradient(circle at 50% 45%, rgba(209,10,10,.10), transparent 25%),
+            radial-gradient(circle at 50% 50%, rgba(168,0,0,.06), transparent 48%),
+            #f7f8fa;
+          color: #171717;
+        }
+        .page.light-theme .loader-brand { color: #171717; }
+        .page.light-theme .loader-status { color: rgba(23,23,23,.56); }
+        .page.light-theme .loader-noise {
+          opacity: .055;
+          background-image:
+            linear-gradient(rgba(15,23,42,.55) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(15,23,42,.55) 1px, transparent 1px);
+        }
+        .page.light-theme .loader-orbit { border-color: rgba(209,10,10,.14); }
+        .page.light-theme .orbit-two { border-color: rgba(168,0,0,.10); }
+        .page.light-theme .loader-core-glow {
+          background: radial-gradient(circle, rgba(209,10,10,.07), transparent 68%);
+        }
+        .page.light-theme .loader-progress {
+          background: rgba(15,23,42,.09);
+        }
+
+        @media (max-width: 640px) {
+          .loader-brand { font-size: 10px; }
+          .loader-brand img { width: 30px; height: 30px; border-radius: 8px; }
+          .loader-lottie-wrap { width: 220px; height: 220px; }
+          .orbit-one { width: 115vw; height: 115vw; }
+          .orbit-two { width: 82vw; height: 82vw; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .premium-loader *,
+          .premium-loader::before,
+          .premium-loader::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+          }
         }
 
         * { box-sizing: border-box; }
