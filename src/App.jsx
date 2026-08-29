@@ -29,6 +29,7 @@ import {
 
 import classaLogo from "./assets/classa-logo.jpg";
 
+
 /* ------------------------------------------------------------------ */
 /* DESIGN TOKENS v2 — "holographic circuit" direction                  */
 /* ------------------------------------------------------------------ */
@@ -294,6 +295,38 @@ function Marquee({ items }) {
         ))}
       </div>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Real app icons — hand-coded so they never depend on an icon         */
+/* library's brand-icon set (many drop Instagram/YouTube/etc).         */
+/* ------------------------------------------------------------------ */
+function IconInstagram({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="5.5" />
+      <circle cx="12" cy="12" r="4.2" />
+      <circle cx="17.4" cy="6.6" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function IconTelegram({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21.5 3.5 3 10.8c-1 .4-1 1 0 1.3l4.6 1.4 1.7 5.4c.2.5.4.7.8.7.3 0 .5-.1.8-.4l2.1-2 4.4 3.2c.7.5 1.3.2 1.5-.7l2.9-13.6c.2-1-.4-1.5-1.3-1.2Z" />
+      <path d="M8.3 13.2 18 6.5" />
+    </svg>
+  );
+}
+
+function IconYoutube({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2.5" y="6" width="19" height="12" rx="4" />
+      <path d="M10.5 9.8v4.4l4-2.2Z" fill="currentColor" stroke="none" />
+    </svg>
   );
 }
 
@@ -1409,8 +1442,30 @@ export default function AkademiyaAIv2() {
         .footer-links a:hover { color: var(--lime); }
         .footer-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--ink-1); }
         .socials { display: flex; gap: 14px; }
-        .social-dot { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: var(--ink-1); transition: border-color 0.25s ease, color 0.25s ease; }
-        .social-dot:hover { border-color: var(--lime); color: var(--lime); }
+        .social-dot {
+          width: 34px; height: 34px; border-radius: 50%;
+          border: 1px solid var(--line);
+          background: var(--glass);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          display: flex; align-items: center; justify-content: center;
+          color: var(--ink-1);
+          text-decoration: none;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.07);
+          transition: border-color 0.25s ease, color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+        }
+        .social-dot:hover {
+          border-color: var(--lime); color: var(--lime); transform: translateY(-3px);
+          background: rgba(200,255,77,0.08);
+          box-shadow: 0 10px 26px rgba(200,255,77,0.22), inset 0 1px 0 rgba(255,255,255,0.12);
+        }
+        .page.light-theme .social-dot {
+          box-shadow: 0 4px 16px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+        .page.light-theme .social-dot:hover {
+          background: rgba(209,10,10,0.06);
+          box-shadow: 0 10px 26px rgba(209,10,10,0.16), inset 0 1px 0 rgba(255,255,255,0.7);
+        }
 
         /* ---------- team section (violet/blue accent, as specified) ---------- */
         .tm-section {
@@ -1969,9 +2024,9 @@ export default function AkademiyaAIv2() {
         <div className="footer-bottom">
           <span>© 2026 Akademiya AI. Barcha huquqlar himoyalangan.</span>
           <div className="socials">
-            <div className="social-dot">in</div>
-            <div className="social-dot">tg</div>
-            <div className="social-dot">yt</div>
+            <a className="social-dot" href="#" aria-label="Instagram"><IconInstagram size={16} /></a>
+            <a className="social-dot" href="#" aria-label="Telegram"><IconTelegram size={16} /></a>
+            <a className="social-dot" href="#" aria-label="YouTube"><IconYoutube size={16} /></a>
           </div>
         </div>
       </footer>
