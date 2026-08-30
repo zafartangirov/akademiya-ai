@@ -498,7 +498,11 @@ function PremiumLoader({ visible }) {
 
       <div className="loader-content">
         <div className="loader-brand">
-          <img src={classaLogo} alt="" />
+          <img
+  src="/favicon.svg"
+  alt="Classa"
+  className="classa-logo"
+/>
           <span>AKADEMIYA AI</span>
         </div>
 
@@ -1226,16 +1230,172 @@ export default function AkademiyaAIv2() {
         .tilt { transition: transform 0.15s ease-out; transform-style: preserve-3d; will-change: transform; }
         .magnetic { transition: transform 0.18s ease-out; }
 
-        /* ---------- nav ---------- */
+
+        /* ---------- animated glow wave behind glass navbar ---------- */
         .nav {
-          position: sticky; top: 0; z-index: 50;
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 18px clamp(20px, 6vw, 64px);
-          transition: all 0.35s ease;
-          border-bottom: 1px solid transparent;
+          isolation: isolate;
         }
-        .nav.scrolled { background: rgba(5,5,10,0.75); backdrop-filter: blur(18px); border-bottom: 1px solid var(--line); }
-        .logo { font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+
+        .nav-glow-wave {
+          position: absolute;
+          z-index: -1;
+          pointer-events: none;
+
+          width: 46%;
+          height: 150px;
+          left: 12%;
+          top: 50%;
+
+          transform: translate3d(-8%, -50%, 0);
+          border-radius: 50%;
+
+          background:
+            radial-gradient(
+              ellipse at center,
+              rgba(255, 45, 70, 0.34) 0%,
+              rgba(255, 45, 70, 0.18) 27%,
+              rgba(255, 45, 70, 0.07) 50%,
+              transparent 74%
+            );
+
+          filter: blur(24px);
+          opacity: 0.72;
+
+          animation: navGlowWave 6s ease-in-out infinite alternate;
+        }
+
+        .nav-glow-wave::before,
+        .nav-glow-wave::after {
+          content: "";
+          position: absolute;
+          border-radius: 50%;
+          pointer-events: none;
+        }
+
+        .nav-glow-wave::before {
+          width: 55%;
+          height: 100%;
+          left: 38%;
+          top: -12%;
+
+          background: radial-gradient(
+            ellipse at center,
+            rgba(53, 242, 224, 0.17),
+            rgba(53, 242, 224, 0.05) 45%,
+            transparent 72%
+          );
+
+          filter: blur(22px);
+          animation: navGlowCyan 5s ease-in-out infinite alternate;
+        }
+
+        .nav-glow-wave::after {
+          width: 38%;
+          height: 85%;
+          left: 70%;
+          top: 12%;
+
+          background: radial-gradient(
+            ellipse at center,
+            rgba(255, 77, 216, 0.13),
+            transparent 70%
+          );
+
+          filter: blur(24px);
+          animation: navGlowMagenta 7s ease-in-out infinite alternate;
+        }
+
+        @keyframes navGlowWave {
+          0% {
+            transform: translate3d(-18%, -50%, 0) scaleX(0.78) scaleY(0.82);
+            opacity: 0.42;
+          }
+
+          45% {
+            transform: translate3d(16%, -50%, 0) scaleX(1.08) scaleY(1.08);
+            opacity: 0.78;
+          }
+
+          100% {
+            transform: translate3d(42%, -50%, 0) scaleX(0.88) scaleY(0.96);
+            opacity: 0.52;
+          }
+        }
+
+        @keyframes navGlowCyan {
+          0% {
+            transform: translate3d(-20px, 12px, 0) scale(0.72);
+            opacity: 0.3;
+          }
+
+          100% {
+            transform: translate3d(28px, -14px, 0) scale(1.12);
+            opacity: 0.72;
+          }
+        }
+
+        @keyframes navGlowMagenta {
+          0% {
+            transform: translate3d(16px, 10px, 0) scale(0.78);
+            opacity: 0.2;
+          }
+
+          100% {
+            transform: translate3d(-24px, -12px, 0) scale(1.12);
+            opacity: 0.62;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .nav-glow-wave {
+            width: 70%;
+            height: 120px;
+            left: 2%;
+            filter: blur(22px);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .nav-glow-wave,
+          .nav-glow-wave::before,
+          .nav-glow-wave::after {
+            animation: none !important;
+          }
+        }
+
+        /* ---------- nav / visible glassmorphism ---------- */
+        .nav {
+          position: sticky; top: 14px; z-index: 50;
+          display: flex; align-items: center; justify-content: space-between;
+          margin: 0 clamp(12px, 3vw, 36px);
+          padding: 12px clamp(16px, 2.5vw, 28px);
+          background: linear-gradient(135deg, rgba(255,255,255,0.13), rgba(255,255,255,0.055) 45%, rgba(255,255,255,0.025));
+          border: 1px solid rgba(255,255,255,0.24);
+          border-radius: 20px;
+          backdrop-filter: blur(28px) saturate(180%);
+          -webkit-backdrop-filter: blur(28px) saturate(180%);
+          box-shadow: 0 18px 55px rgba(0,0,0,0.38), 0 0 0 1px rgba(255,255,255,0.035), 0 0 32px rgba(255,45,70,0.08), inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -1px 0 rgba(255,255,255,0.06);
+          overflow: hidden;
+          transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease;
+        }
+        .nav::before {
+          content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: inherit;
+          background: radial-gradient(500px 120px at 18% 0%, rgba(255,255,255,0.16), transparent 70%), linear-gradient(105deg, rgba(255,255,255,0.07), transparent 35%, transparent 65%, rgba(255,45,70,0.035));
+        }
+        .nav::after {
+          content: ''; position: absolute; top: 0; left: 8%; right: 8%; height: 1px; z-index: 1; pointer-events: none;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.48), transparent); opacity: 0.8;
+        }
+        .nav.scrolled {
+          background: linear-gradient(135deg, rgba(255,255,255,0.11), rgba(255,255,255,0.045));
+          border-color: rgba(255,255,255,0.21);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.46), 0 0 38px rgba(255,45,70,0.09), inset 0 1px 0 rgba(255,255,255,0.24), inset 0 -1px 0 rgba(255,255,255,0.05);
+        }
+        .nav:hover {
+          border-color: rgba(255,255,255,0.30);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.42), 0 0 42px rgba(255,45,70,0.12), inset 0 1px 0 rgba(255,255,255,0.28);
+        }
+        .logo { position: relative; z-index: 2; font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; }
         .logo-dot {
           width: 10px; height: 10px; border-radius: 3px;
           background: linear-gradient(135deg, var(--lime), var(--cyan));
@@ -1243,7 +1403,7 @@ export default function AkademiyaAIv2() {
           animation: dotSpin 4s linear infinite;
         }
         @keyframes dotSpin { to { transform: rotate(360deg); } }
-        .nav-links { display: flex; gap: 36px; list-style: none; margin: 0; padding: 0; }
+        .nav-links { position: relative; z-index: 2; display: flex; gap: 36px; list-style: none; margin: 0; padding: 0; }
         .nav-links a { color: var(--ink-1); text-decoration: none; font-size: 14.5px; font-weight: 500; position: relative; transition: color 0.25s ease; }
         .nav-links a:hover { color: var(--ink-0); }
         .nav-links a::after {
@@ -1252,7 +1412,7 @@ export default function AkademiyaAIv2() {
           transition: width 0.25s ease;
         }
         .nav-links a:hover::after { width: 100%; }
-        .nav-right { display: flex; align-items: center; gap: 14px; }
+        .nav-right { position: relative; z-index: 2; display: flex; align-items: center; gap: 14px; }
         .btn { font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 14px; border: none; cursor: pointer; }
         .btn-ghost { background: transparent; color: var(--ink-0); padding: 10px 18px; transition: color 0.25s ease; }
         .btn-ghost:hover { color: var(--lime); }
@@ -1754,12 +1914,13 @@ export default function AkademiyaAIv2() {
 
       {/* NAV */}
       <header className={`nav ${scrolled ? "scrolled" : ""}`} id="home">
+        <span className="nav-glow-wave" aria-hidden="true" />
         <div className="logo">
   <img
-    src={classaLogo}
-    alt="ClassA"
-    className="classa-logo"
-  />
+  src="/favicon.svg"
+  alt="Classa"
+  className="classa-logo"
+/>
   <span>AKADEMIYA AI</span>
 </div>
         <ul className="nav-links">
@@ -2006,10 +2167,10 @@ export default function AkademiyaAIv2() {
           <div>
             <div className="logo">
   <img
-    src={classaLogo}
-    alt="ClassA"
-    className="classa-logo"
-  />
+  src="/favicon.svg"
+  alt="Classa"
+  className="classa-logo"
+/>
   <span>AKADEMIYA AI</span>
 </div>
             <p className="footer-tag">"Kelajak bilimdan boshlanadi."</p>
