@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import Lenis from "lenis";
 import {
   Sparkles,
   Brain,
@@ -568,10 +569,35 @@ export default function AkademiyaAIv2() {
     setTheme((current) => (current === "dark" ? "light" : "dark"));
   };
 
+  /* ---------------------------------------------------------------- */
+  /* Lenis — premium smooth scrolling                                 */
+  /* ---------------------------------------------------------------- */
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const lenis = new Lenis({
+      duration: 1.05,
+      smoothWheel: true,
+      wheelMultiplier: 0.9,
+      touchMultiplier: 1.0,
+      lerp: 0.085,
+      autoRaf: false,
+    });
+
+    let rafId;
+
+    const raf = (time) => {
+      lenis.raf(time);
+      rafId = window.requestAnimationFrame(raf);
+    };
+
+    rafId = window.requestAnimationFrame(raf);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      lenis.destroy();
+    };
   }, []);
 
   const navLinks = [
@@ -1127,7 +1153,7 @@ export default function AkademiyaAIv2() {
           position: relative;
           overflow-x: hidden;
           max-width: 100vw;
-          scroll-behavior: smooth;
+          scroll-behavior: auto;
           line-height: 1.5;
         }
         .page h1, .page h2, .page h3, .page .display { font-family: 'Unbounded', sans-serif; }
