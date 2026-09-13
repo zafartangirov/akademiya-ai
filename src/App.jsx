@@ -1,5 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Lenis from "lenis";
+import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/react";
+import { useAuth } from '@clerk/react'
+import { createSupabaseClient } from './lib/supabase'
 import {
   Sparkles,
   Brain,
@@ -82,6 +85,8 @@ function CursorGlow() {
   }, []);
   return <div ref={ref} className="cursor-glow" />;
 }
+
+
 
 /* ------------------------------------------------------------------ */
 /* Tilt wrapper — 3D perspective tilt on mouse move                    */
@@ -527,9 +532,298 @@ function PremiumLoader({ visible }) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Student dashboard                                                   */
+/* ------------------------------------------------------------------ */
+
+function StudentDashboard({ theme, toggleTheme, supabase }) {
+  const dark = theme === "dark";
+  const [courses, setCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+  const [coursesError, setCoursesError] = useState("");
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [lessons, setLessons] = useState([]);
+  const [lessonsLoading, setLessonsLoading] = useState(false);
+  const [lessonsError, setLessonsError] = useState("");
+  const [selectedLesson, setSelectedLesson] = useState(null);
+
+  const openCourse = async (course) => {
+    setSelectedCourse(course);
+    setSelectedLesson(null);
+    setLessons([]);
+    setLessonsError("");
+    setLessonsLoading(true);
+
+    const { data, error } = await supabase
+      .from("lessons")
+      .select("id,title,description,content,video_url,position")
+      .eq("course_id", course.id)
+      .eq("is_published", true)
+      .order("position", { ascending: true });
+
+    if (error) {
+      console.error("Lessons load error:", error);
+      setLessonsError("Darslarni yuklashda xatolik yuz berdi.");
+    } else {
+      setLessons(data ?? []);
+    }
+
+    setLessonsLoading(false);
+  };
+
+  const closeCourse = () => {
+    setSelectedCourse(null);
+    setSelectedLesson(null);
+    setLessons([]);
+    setLessonsError("");
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadCourses() {
+      setCoursesLoading(true);
+      setCoursesError("");
+
+      const { data, error } = await supabase
+        .from("courses")
+        .select("id,title,slug,description,thumbnail_url,level,category")
+        .eq("is_published", true)
+        .order("created_at", { ascending: false });
+
+      if (!active) return;
+
+      if (error) {
+        console.error("Courses load error:", error);
+        setCoursesError("Kurslarni yuklashda xatolik yuz berdi.");
+        setCourses([]);
+      } else {
+        setCourses(data ?? []);
+      }
+
+      setCoursesLoading(false);
+    }
+
+    loadCourses();
+
+    return () => {
+      active = false;
+    };
+  }, [supabase]);
+  const bg = dark ? "#05050A" : "#F7F8FA";
+  const panel = dark ? "rgba(255,255,255,0.055)" : "rgba(255,255,255,0.82)";
+  const text = dark ? "#F3F6EF" : "#171717";
+  const muted = dark ? "#9AA2A6" : "#626A73";
+  const border = dark ? "rgba(255,255,255,0.09)" : "rgba(15,23,42,0.12)";
+
+  return (
+    <main style={{ minHeight: "100vh", background: bg, color: text, padding: "28px clamp(18px, 4vw, 56px)" }}>
+      <div style={{ maxWidth: 1240, margin: "0 auto" }}>
+        <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18, marginBottom: 54 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <img src="/favicon.svg" alt="Akademiya AI" style={{ width: 42, height: 42, borderRadius: 12 }} />
+            <div>
+              <div style={{ fontSize: 12, letterSpacing: ".16em", fontWeight: 800, opacity: .72 }}>AKADEMIYA AI</div>
+              <div style={{ fontSize: 14, color: muted, marginTop: 3 }}>O'quvchi paneli</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button onClick={toggleTheme} style={{ border: `1px solid ${border}`, background: panel, color: text, borderRadius: 999, padding: "10px 14px", cursor: "pointer", fontWeight: 700 }}>
+              {dark ? "☀️ Yorug'" : "🌙 Qorong'i"}
+            </button>
+            <UserButton />
+          </div>
+        </header>
+
+        <section style={{ marginBottom: 38 }}>
+          <div style={{ display: "inline-flex", padding: "7px 11px", borderRadius: 999, background: dark ? "rgba(200,255,77,.10)" : "rgba(209,10,10,.08)", color: dark ? "#C8FF4D" : "#D10A0A", fontSize: 12, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase" }}>
+            Shaxsiy kabinet
+          </div>
+          <h1 style={{ fontSize: "clamp(38px, 6vw, 72px)", lineHeight: .98, letterSpacing: "-.045em", margin: "18px 0 14px", maxWidth: 800 }}>
+            Bilim olishni <span style={{ color: dark ? "#C8FF4D" : "#D10A0A" }}>bugun</span> davom ettiring.
+          </h1>
+          <p style={{ maxWidth: 650, color: muted, fontSize: 17, lineHeight: 1.7, margin: 0 }}>
+            Kurslaringiz, o'quv progressi va AI yordamchingiz endi shu yerda. Bu dashboardning birinchi versiyasi.
+          </p>
+        </section>
+
+        <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16, marginBottom: 34 }}>
+          {[
+            ["0%", "Umumiy progress", "Boshlashga tayyor"],
+            ["0", "Tugallangan dars", "Hozircha yo'q"],
+            ["0", "Test natijalari", "Birinchi testni kutmoqda"],
+          ].map(([value, title, sub]) => (
+            <div key={title} style={{ background: panel, border: `1px solid ${border}`, borderRadius: 24, padding: 24, backdropFilter: "blur(18px)" }}>
+              <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-.04em" }}>{value}</div>
+              <div style={{ marginTop: 10, fontWeight: 800 }}>{title}</div>
+              <div style={{ marginTop: 6, color: muted, fontSize: 13 }}>{sub}</div>
+            </div>
+          ))}
+        </section>
+
+        <section>
+          <div style={{ display: "flex", alignItems: "end", justifyContent: "space-between", gap: 16, marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", color: dark ? "#C8FF4D" : "#D10A0A", fontWeight: 900 }}>O'quv katalogi</div>
+              <h2 style={{ margin: "8px 0 0", fontSize: "clamp(26px, 4vw, 40px)", letterSpacing: "-.035em" }}>Kurslar</h2>
+            </div>
+            <div style={{ color: muted, fontSize: 13, fontWeight: 700 }}>
+              {coursesLoading ? "Yuklanmoqda..." : `${courses.length} ta kurs`}
+            </div>
+          </div>
+
+          {coursesError && (
+            <div style={{ background: panel, border: `1px solid ${border}`, borderRadius: 20, padding: 20, color: muted }}>
+              {coursesError}
+            </div>
+          )}
+
+          {coursesLoading && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
+              {[1, 2, 3].map((item) => (
+                <div key={item} style={{ background: panel, border: `1px solid ${border}`, borderRadius: 24, padding: 24, minHeight: 210, opacity: .7 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 16, background: dark ? "rgba(255,255,255,.08)" : "rgba(15,23,42,.06)" }} />
+                  <div style={{ width: "62%", height: 20, borderRadius: 8, background: dark ? "rgba(255,255,255,.08)" : "rgba(15,23,42,.06)", marginTop: 22 }} />
+                  <div style={{ width: "90%", height: 12, borderRadius: 6, background: dark ? "rgba(255,255,255,.06)" : "rgba(15,23,42,.05)", marginTop: 14 }} />
+                  <div style={{ width: "72%", height: 12, borderRadius: 6, background: dark ? "rgba(255,255,255,.06)" : "rgba(15,23,42,.05)", marginTop: 8 }} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!coursesLoading && !coursesError && courses.length === 0 && (
+            <div style={{ background: panel, border: `1px solid ${border}`, borderRadius: 24, padding: 28, color: muted }}>
+              Hozircha e'lon qilingan kurslar yo'q.
+            </div>
+          )}
+
+          {!coursesLoading && !coursesError && courses.length > 0 && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
+              {courses.map((course) => (
+                <article key={course.id} style={{ position: "relative", overflow: "hidden", background: panel, border: `1px solid ${border}`, borderRadius: 24, padding: 24, minHeight: 220, backdropFilter: "blur(18px)" }}>
+                  <div style={{ position: "absolute", top: -45, right: -45, width: 130, height: 130, borderRadius: "50%", background: dark ? "rgba(200,255,77,.12)" : "rgba(209,10,10,.08)", filter: "blur(8px)" }} />
+                  <div style={{ position: "relative" }}>
+                    <div style={{ width: 48, height: 48, display: "grid", placeItems: "center", borderRadius: 16, background: dark ? "rgba(200,255,77,.10)" : "rgba(209,10,10,.08)", color: dark ? "#C8FF4D" : "#D10A0A", fontSize: 24 }}>📚</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 18 }}>
+                      {course.category && <span style={{ padding: "5px 9px", borderRadius: 999, background: dark ? "rgba(255,255,255,.07)" : "rgba(15,23,42,.06)", color: muted, fontSize: 11, fontWeight: 800 }}>{course.category}</span>}
+                      {course.level && <span style={{ padding: "5px 9px", borderRadius: 999, background: dark ? "rgba(255,255,255,.07)" : "rgba(15,23,42,.06)", color: muted, fontSize: 11, fontWeight: 800 }}>{course.level}</span>}
+                    </div>
+                    <h3 style={{ margin: "14px 0 8px", fontSize: 22, letterSpacing: "-.025em" }}>{course.title}</h3>
+                    <p style={{ margin: 0, color: muted, lineHeight: 1.6, fontSize: 14, minHeight: 45 }}>{course.description || "Kurs haqida ma'lumot tez orada qo'shiladi."}</p>
+                    <button
+                      type="button"
+                      onClick={() => openCourse(course)}
+                      style={{ marginTop: 18, border: 0, background: "transparent", color: dark ? "#C8FF4D" : "#D10A0A", padding: 0, fontWeight: 900, cursor: "pointer" }}
+                    >
+                      Kursni ochish →
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {selectedCourse && (
+          <section style={{ marginTop: 28, background: panel, border: `1px solid ${border}`, borderRadius: 28, padding: 28, backdropFilter: "blur(18px)" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 18, marginBottom: 22 }}>
+              <div>
+                <div style={{ fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", color: dark ? "#C8FF4D" : "#D10A0A", fontWeight: 900 }}>Kurs ichida</div>
+                <h2 style={{ margin: "8px 0 6px", fontSize: "clamp(26px, 4vw, 40px)", letterSpacing: "-.035em" }}>{selectedCourse.title}</h2>
+                <p style={{ margin: 0, color: muted, lineHeight: 1.6 }}>{selectedCourse.description || "Kurs darslari"}</p>
+              </div>
+              <button type="button" onClick={closeCourse} style={{ border: `1px solid ${border}`, background: "transparent", color: text, borderRadius: 999, padding: "9px 13px", cursor: "pointer", fontWeight: 800 }}>
+                Yopish
+              </button>
+            </div>
+
+            {lessonsLoading && (
+              <div style={{ color: muted, padding: "18px 0" }}>Darslar yuklanmoqda...</div>
+            )}
+
+            {lessonsError && (
+              <div style={{ color: muted, padding: "18px 0" }}>{lessonsError}</div>
+            )}
+
+            {!lessonsLoading && !lessonsError && lessons.length === 0 && (
+              <div style={{ color: muted, padding: "18px 0" }}>Bu kursda hozircha e'lon qilingan darslar yo'q.</div>
+            )}
+
+            {!lessonsLoading && !lessonsError && lessons.length > 0 && (
+              <div style={{ display: "grid", gap: 10 }}>
+                {lessons.map((lesson, index) => (
+                  <button
+                    key={lesson.id}
+                    type="button"
+                    onClick={() => setSelectedLesson(lesson)}
+                    style={{ width: "100%", textAlign: "left", color: text, background: dark ? "rgba(255,255,255,.035)" : "rgba(15,23,42,.025)", border: `1px solid ${border}`, borderRadius: 18, padding: "17px 18px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}
+                  >
+                    <span style={{ width: 36, height: 36, flex: "0 0 auto", display: "grid", placeItems: "center", borderRadius: 12, background: dark ? "rgba(200,255,77,.10)" : "rgba(209,10,10,.08)", color: dark ? "#C8FF4D" : "#D10A0A", fontWeight: 900 }}>{index + 1}</span>
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ display: "block", fontWeight: 850 }}>{lesson.title}</span>
+                      {lesson.description && <span style={{ display: "block", marginTop: 4, color: muted, fontSize: 13, lineHeight: 1.5 }}>{lesson.description}</span>}
+                    </span>
+                    <span style={{ marginLeft: "auto", color: muted, fontWeight: 900 }}>→</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {selectedLesson && (
+              <article style={{ marginTop: 22, padding: 26, borderRadius: 24, border: `1px solid ${border}`, background: dark ? "rgba(200,255,77,.045)" : "rgba(209,10,10,.035)" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", color: dark ? "#C8FF4D" : "#D10A0A", fontWeight: 900 }}>Dars</div>
+                    <h3 style={{ margin: "8px 0 8px", fontSize: "clamp(24px, 3vw, 34px)", letterSpacing: "-.03em" }}>{selectedLesson.title}</h3>
+                    {selectedLesson.description && <p style={{ margin: 0, color: muted, lineHeight: 1.65 }}>{selectedLesson.description}</p>}
+                  </div>
+                  <button type="button" onClick={() => setSelectedLesson(null)} style={{ border: `1px solid ${border}`, background: "transparent", color: text, borderRadius: 999, padding: "8px 12px", cursor: "pointer", fontWeight: 800 }}>
+                    Yopish
+                  </button>
+                </div>
+
+                <div style={{ marginTop: 24, paddingTop: 22, borderTop: `1px solid ${border}`, color: text, lineHeight: 1.85, whiteSpace: "pre-wrap" }}>
+                  {selectedLesson.content || "Bu dars uchun kontent hali qo'shilmagan."}
+                </div>
+
+                {selectedLesson.video_url && (
+                  <a href={selectedLesson.video_url} target="_blank" rel="noreferrer" style={{ display: "inline-flex", marginTop: 22, color: dark ? "#C8FF4D" : "#D10A0A", fontWeight: 900, textDecoration: "none" }}>
+                    Videoni ko'rish →
+                  </a>
+                )}
+              </article>
+            )}
+          </section>
+        )}
+
+        <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16, marginTop: 16 }}>
+          {[
+            ["🤖", "AI repetitor", "Savollaringizga AI yordamida javob oling va mavzuni mustahkamlang."],
+            ["🎯", "Mening maqsadlarim", "O'quv maqsadlaringiz va kunlik vazifalarni shu yerda boshqaring."],
+          ].map(([icon, title, desc]) => (
+            <button key={title} type="button" style={{ textAlign: "left", color: text, background: panel, border: `1px solid ${border}`, borderRadius: 24, padding: 24, minHeight: 190, cursor: "pointer" }}>
+              <div style={{ fontSize: 28 }}>{icon}</div>
+              <div style={{ fontSize: 20, fontWeight: 900, marginTop: 18 }}>{title}</div>
+              <div style={{ color: muted, lineHeight: 1.6, marginTop: 8 }}>{desc}</div>
+              <div style={{ marginTop: 18, fontSize: 13, fontWeight: 800 }}>Ochish →</div>
+            </button>
+          ))}
+        </section>
+      </div>
+    </main>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Main page                                                           */
 /* ------------------------------------------------------------------ */
 export default function AkademiyaAIv2() {
+  const { getToken } = useAuth();
+
+  const supabase = useMemo(
+    () => createSupabaseClient(getToken),
+    [getToken]
+  );
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -568,6 +862,8 @@ export default function AkademiyaAIv2() {
   const toggleTheme = () => {
     setTheme((current) => (current === "dark" ? "light" : "dark"));
   };
+
+
 
   /* ---------------------------------------------------------------- */
   /* Lenis — premium smooth scrolling                                 */
@@ -728,6 +1024,11 @@ export default function AkademiyaAIv2() {
 
   return (
     <div className={`page ${theme === "light" ? "light-theme" : "dark-theme"}`}>
+      <Show when="signed-in">
+        <StudentDashboard theme={theme} toggleTheme={toggleTheme} supabase={supabase} />
+      </Show>
+
+      <Show when="signed-out">
       <PremiumLoader visible={isLoading} />
       <div className="test-mode">
   <span className="test-mode-dot"></span>
@@ -1967,10 +2268,19 @@ export default function AkademiyaAIv2() {
             <span>{theme === "dark" ? "Yorug' rejim" : "Qorong'i rejim"}</span>
           </button>
 
-          <button className="btn btn-ghost">Kirish</button>
-          <Magnetic className="btn btn-primary">
-            Boshlash <ArrowRight size={15} />
-          </Magnetic>
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <button className="btn btn-ghost">Kirish</button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <Magnetic className="btn btn-primary">
+                Boshlash <ArrowRight size={15} />
+              </Magnetic>
+            </SignUpButton>
+          </Show>
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
           <button className="menu-toggle" onClick={() => setMenuOpen(true)} aria-label="Menyu">
             <Menu size={24} />
           </button>
@@ -2217,6 +2527,7 @@ export default function AkademiyaAIv2() {
           </div>
         </div>
       </footer>
+      </Show>
     </div>
   );
 }
